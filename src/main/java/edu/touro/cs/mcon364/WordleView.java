@@ -10,19 +10,66 @@ import java.awt.event.KeyEvent;
 import static edu.touro.cs.mcon364.WordleModel.NUM_COLS;
 import static edu.touro.cs.mcon364.WordleModel.NUM_ROWS;
 
+/**
+ * GUI for a Wordle game
+ */
 public class WordleView extends JFrame {
+    private final JPanel CANVAS_PANEL;
+    private final WordleModel MODEL;
 
+    /**
+     * Runs the Wordle GUI based on the model
+     * @param model the WordleModel where the game logic takes place
+     */
     public WordleView(WordleModel model) {
         super("Wordle 2.0");
+        MODEL = model;
 
         this.setSize(500, 300);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        JPanel canvasPanel = new JPanel();
-        this.add(canvasPanel, BorderLayout.CENTER);
+        CANVAS_PANEL = new JPanel();
+        CANVAS_PANEL.setLayout(new GridLayout(NUM_ROWS, NUM_COLS, 4, 4));
+        this.add(CANVAS_PANEL, BorderLayout.CENTER);
 
-        canvasPanel.setLayout(new GridLayout(NUM_ROWS, NUM_COLS, 4, 4));
+        populateGameBoard();
 
+        addEnterButton();
+
+        this.setVisible(true);
+    }
+
+    /**
+     * Adds an enter button to the frame
+     */
+    private void addEnterButton() {
+        JButton enterButton = new JButton("Enter");
+        JFrame frame = this;
+        enterButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!MODEL.allFilled()) {
+                    JOptionPane.showMessageDialog(frame, "You must fill out all the letters.");
+                    return;
+                }
+                if (MODEL.checkInput()) {
+                    JOptionPane.showMessageDialog(frame, "You guessed the correct answer!");
+                    System.exit(0);
+                }
+                if (MODEL.getNumGuess() > NUM_ROWS) {
+                    JOptionPane.showMessageDialog(frame, "You lost.");
+                    System.exit(0);
+                }
+            }
+        });
+        this.add(enterButton, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Populates the GUI game board and sets the corresponding game board in the model
+     */
+    private void populateGameBoard() {
+        // When applied, restricts the JTextField to a maximum text length of 1 character
         KeyAdapter oneCharRestriction = new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -39,29 +86,10 @@ public class WordleView extends JFrame {
                 if (i > 0) tf.setEnabled(false);
                 tf.setDisabledTextColor(Color.black);
                 // Add the cell to the virtual game board
-                model.setCell(i, j, tf);
+                MODEL.setCell(i, j, tf);
                 // Add the cell to the GUI game board
-                canvasPanel.add(tf);
+                CANVAS_PANEL.add(tf);
             }
         }
-
-        JButton enterButton = new JButton("Enter");
-        JFrame frame = this;
-        enterButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (model.checkInput()) {
-                    JOptionPane.showMessageDialog(frame, "You guessed the correct answer!");
-                    System.exit(0);
-                }
-                if (model.getNumGuess() > NUM_ROWS) {
-                    JOptionPane.showMessageDialog(frame, "You lost.");
-                    System.exit(0);
-                }
-            }
-        });
-        this.add(enterButton, BorderLayout.SOUTH);
-
-        this.setVisible(true);
     }
 }

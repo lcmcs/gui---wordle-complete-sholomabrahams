@@ -3,6 +3,9 @@ package edu.touro.cs.mcon364;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Logic for a GUI Wordle game
+ */
 public class WordleModel {
     private final JTextField[][] CELLS;
     private final String ANSWER;
@@ -18,14 +21,28 @@ public class WordleModel {
         numGuess = 1;
     }
 
+    /**
+     * Allows the view to add JTextFields to the model
+     * @param row Row where the JTextField belongs
+     * @param col Column where the JTextField belongs
+     * @param textField The JTextField to be added
+     */
     void setCell(int row, int col, JTextField textField) {
         CELLS[row][col] = textField;
     }
 
+    /**
+     * Randomly chooses an answer from the answer bank
+     * @return the answer
+     */
     private String getAnswer() {
         return "SUPER";
     }
 
+    /**
+     * Processes the input when the user hits enter
+     * @return true if the entry 100% matches, false otherwise
+     */
     boolean checkInput() {
         // Arrange the submission into a char[]
         boolean[] correct = new boolean[NUM_COLS];
@@ -65,5 +82,16 @@ public class WordleModel {
         for (JTextField cell : CELLS[numGuess]) {
             cell.setEnabled(true);
         }
+    }
+
+    /**
+     * Checks if all the JTextFields in the submitted row are empty.
+     * @return false if there is an empty cell, else true
+     */
+    public boolean allFilled() {
+        for (JTextField cell : CELLS[numGuess - 1]) {
+            if (cell.getText().isEmpty()) return false;
+        }
+        return true;
     }
 }
