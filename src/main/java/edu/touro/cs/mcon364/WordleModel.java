@@ -2,6 +2,10 @@ package edu.touro.cs.mcon364;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Logic for a GUI Wordle game
@@ -23,8 +27,9 @@ public class WordleModel {
 
     /**
      * Allows the view to add JTextFields to the model
-     * @param row Row where the JTextField belongs
-     * @param col Column where the JTextField belongs
+     *
+     * @param row       Row where the JTextField belongs
+     * @param col       Column where the JTextField belongs
      * @param textField The JTextField to be added
      */
     void setCell(int row, int col, JTextField textField) {
@@ -33,14 +38,24 @@ public class WordleModel {
 
     /**
      * Randomly chooses an answer from the answer bank
+     *
      * @return the answer
      */
     private String getAnswer() {
-        return "SUPER";
+        try {
+            List<String> words = Files.readAllLines(Paths.get("./src/main/java/edu/touro/cs/mcon364/answers.txt"));
+            int rand = new Random().nextInt(words.size());
+            System.out.println(words.get(rand));
+            return words.get(rand).toUpperCase();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "SUPER";
+        }
     }
 
     /**
      * Processes the input when the user hits enter
+     *
      * @return true if the entry 100% matches, false otherwise
      */
     boolean checkInput() {
@@ -79,6 +94,7 @@ public class WordleModel {
         for (JTextField cell : CELLS[numGuess - 1]) {
             cell.setEnabled(false);
         }
+        if (numGuess >= NUM_ROWS) return;
         for (JTextField cell : CELLS[numGuess]) {
             cell.setEnabled(true);
         }
@@ -86,6 +102,7 @@ public class WordleModel {
 
     /**
      * Checks if all the JTextFields in the submitted row are empty.
+     *
      * @return false if there is an empty cell, else true
      */
     public boolean allFilled() {
