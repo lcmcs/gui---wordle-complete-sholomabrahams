@@ -1,39 +1,37 @@
 package edu.touro.cs.mcon364;
 
-import javax.swing.*;
-import java.awt.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+
+import static edu.touro.cs.mcon364.WordleResponse.*;
 
 /**
  * Logic for a GUI Wordle game
  */
 public class WordleModel {
-    private final JTextField[][] CELLS;
-    private final String ANSWER;
-    private int numGuess;
+    private static final int LETTERS_IN_ALPHABET = 26;
+    private static final int ASCII_OFFSET = 65;
 
-    static final int NUM_ROWS = 6;
-    static final int NUM_COLS = 5;
+    private String answer;
+    private List<String> words;
+    private int[] answerCounts;
 
     public WordleModel() {
-        // Initialize virtual game board
-        CELLS = new JTextField[NUM_ROWS][NUM_COLS];
-        ANSWER = getAnswer();
-        numGuess = 1;
+        try {
+            words = Files.readAllLines(Paths.get("./answers.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        newGame();
     }
 
-    /**
-     * Allows the view to add JTextFields to the model
-     *
-     * @param row       Row where the JTextField belongs
-     * @param col       Column where the JTextField belongs
-     * @param textField The JTextField to be added
-     */
-    void setCell(int row, int col, JTextField textField) {
-        CELLS[row][col] = textField;
+    public void newGame() {
+        answer = getAnswer();
     }
 
     /**
@@ -42,15 +40,11 @@ public class WordleModel {
      * @return the answer
      */
     private String getAnswer() {
-        try {
-            List<String> words = Files.readAllLines(Paths.get("./src/main/java/edu/touro/cs/mcon364/answers.txt"));
-            int rand = new Random().nextInt(words.size());
-            System.out.println(words.get(rand));
-            return words.get(rand).toUpperCase();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "SUPER";
-        }
+        int rand = new Random().nextInt(words.size());
+        String word = words.get(rand).toUpperCase();
+        // Initialize and populate array with count of how many of each letter in the answer
+        answerCounts = getLettersCount(word.toCharArray());
+        return word;
     }
 
     /**
@@ -58,57 +52,36 @@ public class WordleModel {
      *
      * @return true if the entry 100% matches, false otherwise
      */
-    boolean checkInput() {
-        // Arrange the submission into a char[]
-        boolean[] correct = new boolean[NUM_COLS];
-        for (int i = 0; i < NUM_COLS; i++) {
-            JTextField cell = CELLS[numGuess - 1][i];
+    public List<WordleResponse> checkGuess(String guess) {
+        int size = guess.length();
+        if (!isLegalWord(guess)) return Collections.singletonList(ILLEGAL_WORD);
 
-            int positionInAnswer = ANSWER.indexOf(Character.toUpperCase(cell.getText().charAt(0)));
-            if (positionInAnswer < 0) { // character is not in the answer
-                cell.setBackground(UIManager.getColor("Panel.background"));
+        List<WordleResponse> response = new ArrayList<>(size);
+        char[] guessChars = guess.toUpperCase().toCharArray();
+        int[] guessCounts = getLettersCount(guessChars);
+        for (int i = 0; i < size; i++) {
+            char currentChar = guessChars[i];
+            if (currentChar == answer.charAt(i)) {
+                response.add(CORRECT);
+            } else if (answer.indexOf(currentChar) >= 0) {
+                response.add(DIFFERENT_POSITION);
             } else {
-                boolean isCorrectPosition = positionInAnswer == i;
-                if (isCorrectPosition) correct[i] = true;
-                cell.setBackground(isCorrectPosition ? Color.green : Color.orange);
+                response.add(WRONG);
             }
         }
 
-        disableRow();
-        numGuess++;
-
-        for (boolean b : correct) {
-            if (!b) return false;
-        }
-        return true;
+        return response;
     }
 
-    int getNumGuess() {
-        return numGuess;
+    private static int[] getLettersCount(char[] word) {
+        int[] result = new int[LETTERS_IN_ALPHABET];
+        for (char c : word) {
+            result[c - ASCII_OFFSET]++;
+        }
+        return result;
     }
 
-    /**
-     * Disables the row associated with the current guess and enables the proceeding row.
-     */
-    private void disableRow() {
-        for (JTextField cell : CELLS[numGuess - 1]) {
-            cell.setEnabled(false);
-        }
-        if (numGuess >= NUM_ROWS) return;
-        for (JTextField cell : CELLS[numGuess]) {
-            cell.setEnabled(true);
-        }
-    }
-
-    /**
-     * Checks if all the JTextFields in the submitted row are empty.
-     *
-     * @return false if there is an empty cell, else true
-     */
-    public boolean allFilled() {
-        for (JTextField cell : CELLS[numGuess - 1]) {
-            if (cell.getText().isEmpty()) return false;
-        }
-        return true;
+    private boolean isLegalWord(String guess) {
+        return words.contains(guess.toLowerCase());
     }
 }

@@ -2,93 +2,146 @@ package edu.touro.cs.mcon364;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-
-import static edu.touro.cs.mcon364.WordleModel.NUM_COLS;
-import static edu.touro.cs.mcon364.WordleModel.NUM_ROWS;
+import java.util.List;
 
 /**
  * GUI for a Wordle game
  */
 public class WordleView extends JFrame {
-    private final JPanel CANVAS_PANEL;
+    static final int NUM_ROWS = 6;
+    static final int NUM_COLS = 5;
+
     private final WordleModel MODEL;
+    private JPanel panel;
+
+    private JLabel[][] cells;
+    private int numGuess = 0;
+
 
     /**
      * Runs the Wordle GUI based on the model
+     *
      * @param model the WordleModel where the game logic takes place
      */
     public WordleView(WordleModel model) {
-        super("Wordle 2.0");
+        super("Wordle - Complete");
         MODEL = model;
 
         this.setSize(500, 300);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        CANVAS_PANEL = new JPanel();
-        CANVAS_PANEL.setLayout(new GridLayout(NUM_ROWS, NUM_COLS, 4, 4));
-        this.add(CANVAS_PANEL, BorderLayout.CENTER);
+        // Handle key-presses
+        this.addKeyListener(new KeyHandler());
 
         populateGameBoard();
-
-        addEnterButton();
 
         this.setVisible(true);
     }
 
     /**
-     * Adds an enter button to the frame
+     * Gets a representation of the current guess as it stands
+     *
+     * @return a String containing the current guess as it stands
      */
-    private void addEnterButton() {
-        JButton enterButton = new JButton("Enter");
-        JFrame frame = this;
-        enterButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!MODEL.allFilled()) {
-                    JOptionPane.showMessageDialog(frame, "You must fill out all the letters.");
-                    return;
-                }
-                if (MODEL.checkInput()) {
-                    JOptionPane.showMessageDialog(frame, "You guessed the correct answer!");
-                    System.exit(0);
-                }
-                if (MODEL.getNumGuess() > NUM_ROWS) {
-                    JOptionPane.showMessageDialog(frame, "You lost.");
-                    System.exit(0);
-                }
+    private String getCurrentGuess() {
+        StringBuilder guess = new StringBuilder(NUM_COLS);
+        for (JLabel label : cells[numGuess]) {
+            String labelText = label.getText();
+            if (labelText.isEmpty()) return guess.toString();
+            guess.append(labelText.charAt(0));
+        }
+        return guess.toString();
+    }
+
+    /**
+     *
+     */
+    private void checkGuess() {
+        List<WordleResponse> response = MODEL.checkGuess(getCurrentGuess());
+        if (response.size() == 1) {
+            JOptionPane.showMessageDialog(this, "Invalid entry.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int countCorrect = 0;
+        for (int i = 0; i < response.size(); i++) {
+            WordleResponse code = response.get(i);
+            switch (code) {
+                case WRONG:
+                    cells[numGuess][i].setBackground(UIManager.getColor("Panel.background"));
+                    break;
+                case DIFFERENT_POSITION:
+                    cells[numGuess][i].setBackground(Color.orange);
+                    break;
+                case CORRECT:
+                    cells[numGuess][i].setBackground(Color.GREEN);
+                    countCorrect++;
+                    break;
             }
-        });
-        this.add(enterButton, BorderLayout.SOUTH);
+        }
+        if (countCorrect == NUM_COLS) {
+            gameWon();
+            return;
+        }
+        numGuess++;
+    }
+
+    /**
+     *
+     */
+    private void gameWon() {
+        int input = JOptionPane.showConfirmDialog(this, "You won!\nWould you like to play again?", "You Won", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (input == 1) System.exit(0);
+        // Initialize new game
+        populateGameBoard();
+        numGuess = 0;
+        MODEL.newGame();
     }
 
     /**
      * Populates the GUI game board and sets the corresponding game board in the model
      */
     private void populateGameBoard() {
-        // When applied, restricts the JTextField to a maximum text length of 1 character
-        KeyAdapter oneCharRestriction = new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                if (((JTextField) e.getSource()).getText().length() >= 1) e.consume();
-            }
-        };
+        // Add panel with grid
+        panel = new JPanel();
+        panel.setLayout(new GridLayout(NUM_ROWS, NUM_COLS, 4, 4));
+        this.add(panel, BorderLayout.CENTER);
+        panel.updateUI();
+
+        cells = new JLabel[NUM_ROWS][NUM_COLS];
 
         // Populate the GUI and virtual game boards
         for (int i = 0; i < NUM_ROWS; i++) {
             for (int j = 0; j < NUM_COLS; j++) {
-                JTextField tf = new JTextField();
-                // Limit each cell to one character
-                tf.addKeyListener(oneCharRestriction);
-                if (i > 0) tf.setEnabled(false);
-                tf.setDisabledTextColor(Color.black);
+                JLabel label = new JLabel();
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setOpaque(true);
+                label.setBackground(Color.white);
                 // Add the cell to the virtual game board
-                MODEL.setCell(i, j, tf);
+                cells[i][j] = label;
                 // Add the cell to the GUI game board
-                CANVAS_PANEL.add(tf);
+                panel.add(label);
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    private class KeyHandler extends KeyAdapter {
+        @Override
+        public void keyPressed(KeyEvent e) {
+            int currentLength = getCurrentGuess().length();
+            int keyCode = e.getKeyCode();
+            if (keyCode == 10 && currentLength == NUM_COLS) { // Enter
+                checkGuess();
+            } else if (keyCode == 8 && currentLength >= 1) { // Backspace
+                int indexToDelete = currentLength - 1;
+                cells[numGuess][indexToDelete].setText("");
+            } else if (currentLength != NUM_COLS && keyCode >= 65 && keyCode <= 122 && (keyCode >= 97 || keyCode <= 90)) {
+                // if guess is not currently full, and is a letter in the English alphabet:
+                cells[numGuess][currentLength].setText(String.valueOf(Character.toUpperCase(e.getKeyChar())));
             }
         }
     }
