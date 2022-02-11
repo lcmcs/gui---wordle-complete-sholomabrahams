@@ -14,10 +14,12 @@ public class WordleModel {
     private static final int LETTERS_IN_ALPHABET = 26;
     private static final int ASCII_OFFSET = 65;
 
-    String answer;
-    private List<String> words;
+    // A whole bunch of stuff would be private, but needs to be public for the tests to work
+    public String answer;
+    public List<String> words;
+    public int[] answerCounts;
+
     private final Set<String> WORD_SET;
-    private int[] answerCounts;
 
     public WordleModel() {
         try {
@@ -44,6 +46,7 @@ public class WordleModel {
     private String getAnswer() {
         int rand = new Random().nextInt(words.size());
         String word = words.get(rand).toUpperCase();
+//        String word = "SAFER";
         // Initialize and populate array with count of how many of each letter in the answer
         answerCounts = getLettersCount(word);
         return word;
@@ -109,7 +112,7 @@ public class WordleModel {
      * @return an int[] the length of the alphabet with a count of how many times
      * the letter at that index of the alphabet appears in the word
      */
-    private static int[] getLettersCount(String word) {
+    public static int[] getLettersCount(String word) {
         char[] letters = word.toCharArray();
         int[] result = new int[LETTERS_IN_ALPHABET];
         for (char c : letters) {
