@@ -14,7 +14,6 @@ public class WordleView extends JFrame {
     static final int NUM_COLS = 5;
 
     private final WordleModel MODEL;
-    private JPanel panel;
 
     private JLabel[][] cells;
     private int numGuess = 0;
@@ -56,11 +55,11 @@ public class WordleView extends JFrame {
     }
 
     /**
-     *
+     * Check the guess and handle the model's response
      */
     private void checkGuess() {
         List<WordleResponse> response = MODEL.checkGuess(getCurrentGuess());
-        if (response.size() == 1) {
+        if (response.size() <  NUM_COLS) {
             JOptionPane.showMessageDialog(this, "Invalid entry.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -88,7 +87,7 @@ public class WordleView extends JFrame {
     }
 
     /**
-     *
+     * Start a new game or exit based on the user's input
      */
     private void gameWon() {
         int input = JOptionPane.showConfirmDialog(this, "You won!\nWould you like to play again?", "You Won", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -104,7 +103,7 @@ public class WordleView extends JFrame {
      */
     private void populateGameBoard() {
         // Add panel with grid
-        panel = new JPanel();
+        JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(NUM_ROWS, NUM_COLS, 4, 4));
         this.add(panel, BorderLayout.CENTER);
         panel.updateUI();
@@ -127,7 +126,7 @@ public class WordleView extends JFrame {
     }
 
     /**
-     *
+     * KeyHandler for the frame
      */
     private class KeyHandler extends KeyAdapter {
         @Override
