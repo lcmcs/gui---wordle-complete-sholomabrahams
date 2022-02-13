@@ -13,7 +13,7 @@ import static edu.touro.cs.mcon364.WordleResponse.*;
 public class WordleModel {
     private static final int LETTERS_IN_ALPHABET = 26;
 
-    // A whole bunch of stuff would be private, but needs to be public for the tests to work
+    // The package-private variables and method would be private, but need to be package-private for the tests to work
     String answer;
     List<String> words;
     Map<Character, Integer> answerCounts;
