@@ -1,8 +1,7 @@
-import edu.touro.cs.mcon364.WordleModel;
-import edu.touro.cs.mcon364.WordleResponse;
+package edu.touro.cs.mcon364;
+
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,10 +16,10 @@ public class WordleTests {
     }
 
     @Test
-    public void TestAnswerIntegrity() {
+    public void answerIntegrity() {
         boolean anyInvalid = false;
         for (char c : model.answer.toCharArray()) {
-            if (c < 65 || c > 90) { // Not a capital letter
+            if (c < 'A' || c > 'Z') { // Not a capital letter
                 anyInvalid = true;
                 break;
             }
@@ -29,7 +28,17 @@ public class WordleTests {
     }
 
     @Test
-    public void TestNewGame() {
+    public void answerSelection() {
+        var localModel = new WordleModel();
+        localModel.words = Collections.singletonList("HELLO");
+        for (int i  = 0; i < 2; i++) {
+            localModel.newGame();
+            assertEquals("HELLO", localModel.answer);
+        }
+    }
+
+    @Test
+    public void newGame() {
         var original = model.answer;
         model.newGame();
         var newAns = model.answer;
@@ -37,13 +46,13 @@ public class WordleTests {
     }
 
     @Test
-    public void InvalidGuess() {
+    public void invalidGuess() {
         var res = model.checkGuess("ZVXYA");
         assertEquals(Collections.singletonList(ILLEGAL_WORD), res);
     }
 
     @Test
-    public void DoubleLetterGuess() {
+    public void doubleLetterGuess() {
         model.answer = "SAFER";
         model.answerCounts = WordleModel.getLettersCount(model.answer);
         var res = model.checkGuess("EERIE");
@@ -51,7 +60,7 @@ public class WordleTests {
     }
 
     @Test
-    public void DoubleLetterAnswer() {
+    public void doubleLetterAnswer() {
         model.answer = "EERIE";
         model.answerCounts = WordleModel.getLettersCount(model.answer);
         var res = model.checkGuess("EVERY");
@@ -59,7 +68,7 @@ public class WordleTests {
     }
 
     @Test
-    public void CorrectAnswer() {
+    public void correctAnswer() {
         model.answer = "EERIE";
         model.answerCounts = WordleModel.getLettersCount(model.answer);
         var res = model.checkGuess("EERIE");

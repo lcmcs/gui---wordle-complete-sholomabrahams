@@ -12,12 +12,12 @@ import static edu.touro.cs.mcon364.WordleResponse.*;
  */
 public class WordleModel {
     private static final int LETTERS_IN_ALPHABET = 26;
-    private static final int ASCII_OFFSET = 65;
+    private static final int ASCII_OFFSET = 'A';
 
     // A whole bunch of stuff would be private, but needs to be public for the tests to work
-    public String answer;
-    public List<String> words;
-    public int[] answerCounts;
+    String answer;
+    List<String> words;
+    Map<Character, Integer> answerCounts;
 
     private final Set<String> WORD_SET;
 
@@ -63,26 +63,25 @@ public class WordleModel {
 
         List<WordleResponse> response = new ArrayList<>(guessLength);
         // Arrays to keep track of how many unaccounted-for remaining of each letter of the alphabet
-        int[] guessCounts = getLettersCount(guess);
-        int[] ansCounts = answerCounts.clone();
+        Map<Character, Integer> guessCounts = getLettersCount(guess);
+        Map<Character, Integer> ansCounts = new HashMap<>(answerCounts);
 
         // Add the appropriate WordleResponse to the response for each char in the guess
         for (int i = 0; i < guessLength; i++) {
             char currentChar = guess.charAt(i); // The char at this index of the guess
-            int posInAlphabet = currentChar - ASCII_OFFSET;
             if (currentChar == answer.charAt(i)) { // Char is in correct position
                 response.add(CORRECT);
-                guessCounts[posInAlphabet]--;
-                ansCounts[posInAlphabet]--;
+                guessCounts.put(currentChar, guessCounts.get(currentChar) - 1);
+                ansCounts.put(currentChar, ansCounts.get(currentChar) - 1);
             } else if (answer.indexOf(currentChar) >= 0) { // Char is elsewhere in the answer
-                if (ansCounts[posInAlphabet] > 0 && guessCounts[posInAlphabet] == 1) { // No duplicates of this char in the guess
+                if (ansCounts.getOrDefault(currentChar, 0) > 0 && guessCounts.getOrDefault(currentChar, 0) == 1) { // No duplicates of this char in the guess
                     response.add(DIFFERENT_POSITION);
-                    guessCounts[posInAlphabet]--;
-                    ansCounts[posInAlphabet]--;
+                    guessCounts.put(currentChar, guessCounts.get(currentChar) - 1);
+                    ansCounts.put(currentChar, ansCounts.get(currentChar) - 1);
                 } else response.add(null); // Save duplicates for later
             } else { // Char is not in answer
                 response.add(WRONG);
-                guessCounts[posInAlphabet]--;
+                guessCounts.put(currentChar, guessCounts.get(currentChar) - 1);
             }
         }
 
@@ -91,14 +90,13 @@ public class WordleModel {
         for (int i = 0; i < guessLength; i++) {
             if (response.get(i) != null) continue;
             char currentChar = guess.charAt(i);
-            int posInAlphabet = currentChar - ASCII_OFFSET;
-            if (ansCounts[posInAlphabet] > 0) { // There are still unaccounted-for occurrences of this letter in the answer
+            if (ansCounts.getOrDefault(currentChar, 0) > 0) { // There are still unaccounted-for occurrences of this letter in the answer
                 response.set(i, DIFFERENT_POSITION);
-                guessCounts[posInAlphabet]--;
-                ansCounts[posInAlphabet]--;
+                guessCounts.put(currentChar, guessCounts.get(currentChar) - 1);
+                ansCounts.put(currentChar, ansCounts.get(currentChar) - 1);
             } else { // No more of this letter unaccounted-for in the answer
                 response.set(i, WRONG);
-                guessCounts[posInAlphabet]--;
+                guessCounts.put(currentChar, guessCounts.get(currentChar) - 1);
             }
         }
 
@@ -112,11 +110,12 @@ public class WordleModel {
      * @return an int[] the length of the alphabet with a count of how many times
      * the letter at that index of the alphabet appears in the word
      */
-    public static int[] getLettersCount(String word) {
+    static Map<Character, Integer> getLettersCount(String word) {
         char[] letters = word.toCharArray();
-        int[] result = new int[LETTERS_IN_ALPHABET];
+        Map<Character, Integer> result = new HashMap<>(LETTERS_IN_ALPHABET);
         for (char c : letters) {
-            result[c - ASCII_OFFSET]++;
+            int current = result.getOrDefault(c, 0);
+            result.put(c, current + 1);
         }
         return result;
     }
