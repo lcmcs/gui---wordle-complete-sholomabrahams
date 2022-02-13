@@ -12,7 +12,6 @@ import static edu.touro.cs.mcon364.WordleResponse.*;
  */
 public class WordleModel {
     private static final int LETTERS_IN_ALPHABET = 26;
-    private static final int ASCII_OFFSET = 'A';
 
     // A whole bunch of stuff would be private, but needs to be public for the tests to work
     String answer;
