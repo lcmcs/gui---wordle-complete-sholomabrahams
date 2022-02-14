@@ -18,6 +18,7 @@ public class WordleModel {
     List<String> words;
     Map<Character, Integer> answerCounts;
 
+    private final Random rand;
     private final Set<String> WORD_SET;
 
     public WordleModel() {
@@ -27,6 +28,7 @@ public class WordleModel {
             e.printStackTrace();
         }
         WORD_SET = new HashSet<>(words);
+        rand = new Random();
         newGame();
     }
 
@@ -43,8 +45,8 @@ public class WordleModel {
      * @return the answer
      */
     private String getAnswer() {
-        int rand = new Random().nextInt(words.size());
-        String word = words.get(rand).toUpperCase();
+        int r = rand.nextInt(words.size());
+        String word = words.get(r).toUpperCase();
 //        String word = "SAFER";
         // Initialize and populate array with count of how many of each letter in the answer
         answerCounts = getLettersCount(word);
@@ -112,10 +114,7 @@ public class WordleModel {
     static Map<Character, Integer> getLettersCount(String word) {
         char[] letters = word.toCharArray();
         Map<Character, Integer> result = new HashMap<>(LETTERS_IN_ALPHABET);
-        for (char c : letters) {
-            int current = result.getOrDefault(c, 0);
-            result.put(c, current + 1);
-        }
+        for (char c : letters) result.put(c, result.getOrDefault(c, 0) + 1);
         return result;
     }
 }
