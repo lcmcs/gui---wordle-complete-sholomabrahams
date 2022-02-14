@@ -6,6 +6,9 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
+import static java.awt.event.KeyEvent.VK_BACK_SPACE;
+import static java.awt.event.KeyEvent.VK_ENTER;
+
 /**
  * GUI for a Wordle game
  */
@@ -132,13 +135,12 @@ public class WordleView extends JFrame {
         @Override
         public void keyPressed(KeyEvent e) {
             int currentLength = getCurrentGuess().length();
-            int keyCode = e.getKeyCode();
-            if (keyCode == 10 && currentLength == NUM_COLS) { // Enter
+            char keyCode = e.getKeyChar();
+            if (keyCode == VK_ENTER && currentLength == NUM_COLS) { // Enter
                 checkGuess();
-            } else if (keyCode == 8 && currentLength >= 1) { // Backspace
-                int indexToDelete = currentLength - 1;
-                cells[numGuess][indexToDelete].setText("");
-            } else if (currentLength != NUM_COLS && keyCode >= 65 && keyCode <= 122 && (keyCode >= 97 || keyCode <= 90)) {
+            } else if (keyCode == VK_BACK_SPACE && currentLength >= 1) { // Backspace
+                cells[numGuess][currentLength - 1].setText("");
+            } else if (currentLength != NUM_COLS && keyCode >= 'A' && keyCode <= 'z' && (keyCode >= 'a' || keyCode <= 'Z')) {
                 // if guess is not currently full, and is a letter in the English alphabet:
                 cells[numGuess][currentLength].setText(String.valueOf(Character.toUpperCase(e.getKeyChar())));
             }
